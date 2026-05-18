@@ -13,6 +13,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Bibi PDV" />
   <meta name="theme-color" content="#ec4899" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -190,7 +197,7 @@
             className="animate-bounceIn relative z-10 w-full max-w-sm bg-white border-2 border-pink-100 rounded-[2rem] p-8 shadow-xl">
             <div className="flex flex-col items-center mb-7">
               <img src="logo.png" alt="Bibi Papelaria"
-                className="w-36 h-36 object-contain drop-shadow-lg mb-2" />
+                className="w-36 h-36 object-cover rounded-full drop-shadow-lg mb-2" />
               <p className="text-gray-400 font-bold text-xs">Acesso ao Sistema</p>
             </div>
 
@@ -1094,7 +1101,7 @@
           <aside className={`sidebar-trans fixed md:relative z-50 flex flex-col w-60 min-h-screen bg-white border-r-2 border-pink-100 shadow-lg ${sideOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
             <div className="p-5 border-b-2 border-pink-50 flex flex-col items-center text-center">
               <img src="logo.png" alt="Bibi Papelaria"
-                className="w-24 h-24 object-contain drop-shadow-md mb-1" />
+                className="w-24 h-24 object-cover rounded-full drop-shadow-md mb-1" />
               <p className="text-gray-400 text-[10px] font-black bg-gray-50 px-3 py-1 rounded-full mt-1">
                 {usuario}
               </p>
@@ -1135,7 +1142,7 @@
             <div className="md:hidden flex items-center gap-3 p-4 border-b-2 border-pink-100 bg-white sticky top-0 z-30 shadow-sm">
               <button onClick={() => setSideOpen(true)}
                 className="w-10 h-10 rounded-xl bg-pink-50 text-pink-500 font-bold flex items-center justify-center text-xl">☰</button>
-              <img src="logo.png" className="w-8 h-8 object-contain" alt="" />
+              <img src="logo.png" className="w-8 h-8 object-cover rounded-full" alt="" />
               <span className="text-pink-500 font-black">Bibi Papelaria</span>
             </div>
 
