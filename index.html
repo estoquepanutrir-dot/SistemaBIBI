@@ -171,7 +171,7 @@
       );
     }
 
-    function Modal({ open, onClose, title, children, wide }) {
+    function Modal({ open, onClose, title, children, wide, bloqueado }) {
       useEffect(() => {
         if (open) document.body.style.overflow = "hidden";
         else document.body.style.overflow = "";
@@ -180,12 +180,14 @@
       if (!open) return null;
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-             onClick={e => e.target === e.currentTarget && onClose()}>
+             onClick={e => e.target === e.currentTarget && !bloqueado && onClose()}>
           <div className={`animate-bounceIn bg-white rounded-3xl p-6 w-full shadow-2xl ${wide ? "max-w-lg" : "max-w-md"}`}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-black text-pink-500">{title}</h2>
-              <button onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-pink-50 text-pink-400 hover:bg-pink-100 font-bold text-xl transition-colors">✕</button>
+              {!bloqueado && (
+                <button onClick={onClose}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-pink-50 text-pink-400 hover:bg-pink-100 font-bold text-xl transition-colors">✕</button>
+              )}
             </div>
             {children}
           </div>
@@ -1608,11 +1610,13 @@
       useEffect(() => {
         if (!logado || !caixaAberto) return;
         setCarregando(true);
+        const hoje = new Date().toLocaleDateString("pt-BR");
         Promise.all([api.call("getProdutos"), api.call("getVendas"), api.call("getSaidasCaixa")]).then(([p, v, s]) => {
           if (p.success) setProdutos(p.data || []);
           else addToast("Erro ao carregar produtos.", "error");
-          if (v.success) setVendas(v.data || []);
-          if (s.success) setSaidas(s.data || []);
+          // FIX: filtra apenas vendas e saídas do dia atual do caixa
+          if (v.success) setVendas((v.data || []).filter(venda => venda.data === hoje));
+          if (s.success) setSaidas((s.data || []).filter(saida => saida.data === hoje));
           setCarregando(false);
         });
       }, [logado, caixaAberto]);
@@ -1638,7 +1642,7 @@
           case "vendas":    return <Vendas    {...vendaProps} />;
           case "estoque":   return <Estoque   {...props} />;
           case "saidas":    return <SaidasCaixa saidas={saidas} setSaidas={setSaidas} addToast={addToast} api={api} />;
-          case "historico": return <Historico {...props} saidas={saidas} valorCaixa={valorCaixa} caixaAberto={caixaAberto} onFecharCaixa={() => { setCaixaAberto(false); setValorCaixa(0); setVendas([]); setSaidas([]); setCarrinho([]); setModalCaixa(true); addToast("Caixa fechado! Abra um novo para continuar.", "warn"); setTela("dashboard"); }} />;
+          case "historico": return <Historico {...props} saidas={saidas} valorCaixa={valorCaixa} caixaAberto={caixaAberto} onFecharCaixa={() => { setCaixaAberto(false); setValorCaixa(0); setValorInicial(""); setVendas([]); setSaidas([]); setCarrinho([]); setModalCaixa(true); addToast("Caixa fechado! Abra um novo para continuar.", "warn"); setTela("dashboard"); }} />;
           default:          return null;
         }
       }
@@ -1766,8 +1770,8 @@
             </div>
           )}
 
-          {/* Modal Abrir Caixa */}
-          <Modal open={modalCaixa} onClose={() => {}} title="Abrir Caixa">
+          {/* Modal Abrir Caixa - não pode ser fechado sem preencher */}
+          <Modal open={modalCaixa} onClose={() => {}} title="Abrir Caixa" bloqueado={true}>
             <div className="flex flex-col gap-4">
               <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 text-center">
                 <span className="text-4xl">💰</span>
