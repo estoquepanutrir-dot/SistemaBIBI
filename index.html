@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Impede que navegador/CDN sirva HTML em cache -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Bibi Papelaria - Sistema PDV</title>
   <link rel="icon" type="image/png" href="logo.png" />
 
@@ -14,10 +18,48 @@
   <meta name="apple-mobile-web-app-title" content="Bibi PDV" />
   <meta name="theme-color" content="#ec4899" />
   <script>
+    // ── Service Worker com detecção de atualização automática ──
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js');
+      window.addEventListener('load', async () => {
+        try {
+          const reg = await navigator.serviceWorker.register('./sw.js');
+
+          // Verifica atualizações a cada 60 segundos enquanto o app está aberto
+          setInterval(() => reg.update(), 60000);
+
+          // Quando um novo SW está esperando, mostra o banner de atualização
+          function onNewSW(sw) {
+            sw.addEventListener('statechange', () => {
+              if (sw.state === 'installed') mostrarBannerAtualizacao(sw);
+            });
+          }
+
+          if (reg.waiting) {
+            mostrarBannerAtualizacao(reg.waiting);
+          }
+          reg.addEventListener('updatefound', () => {
+            onNewSW(reg.installing);
+          });
+
+          // Quando o SW ativo muda (após skipWaiting), recarrega a página
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
+
+        } catch (err) {
+          console.warn('[SW] Registro falhou:', err);
+        }
       });
+    }
+
+    function mostrarBannerAtualizacao(sw) {
+      const banner = document.getElementById('update-banner');
+      if (!banner) return;
+      banner.style.display = 'flex';
+      document.getElementById('update-btn').onclick = () => {
+        sw.postMessage('SKIP_WAITING');
+        banner.style.display = 'none';
+      };
     }
   </script>
   
@@ -68,6 +110,17 @@
   </style>
 </head>
 <body>
+  <!-- Banner de atualização disponível -->
+  <div id="update-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1e293b;color:#fff;padding:14px 20px;align-items:center;justify-content:space-between;gap:12px;font-family:sans-serif;font-size:14px;box-shadow:0 -4px 20px rgba(0,0,0,0.3);">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;">🆕</span>
+      <span><strong>Nova versão disponível!</strong> Atualize para usar as últimas funcionalidades.</span>
+    </div>
+    <button id="update-btn" style="background:#ec4899;color:#fff;border:none;border-radius:20px;padding:8px 20px;font-weight:900;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+      Atualizar agora
+    </button>
+  </div>
+
   <div id="root"></div>
 
   <script type="text/babel">
