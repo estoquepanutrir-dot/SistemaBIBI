@@ -1,5 +1,5 @@
 // Incrementar CACHE_VERSION a cada deploy para forçar atualização em todos os clientes
-const CACHE_VERSION = '2026-05-19-v4';
+const CACHE_VERSION = '2026-05-20-v1';
 const CACHE_NAME = `bibi-pdv-${CACHE_VERSION}`;
 
 const ASSETS = [
